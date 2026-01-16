@@ -18,14 +18,14 @@ export const sessions = pgTable(
     sess: jsonb("sess").notNull(),
     expire: timestamp("expire").notNull(),
   },
-  (table) => [index("IDX_session_expire").on(table.expire)],
+  (table) => [index("IDX_session_expire").on(table.expire)]
 );
 
 // User storage table
 export const users = pgTable("users", {
-  // Google IDs are long strings, so we use text. 
+  // Google IDs are long strings, so we use text.
   // We removed the default UUID generator because Google provides the ID.
-  id: text("id").primaryKey(), 
+  id: text("id").primaryKey(),
   email: text("email").unique(),
   firstName: text("first_name"),
   lastName: text("last_name"),
@@ -47,21 +47,38 @@ export type User = typeof users.$inferSelect;
 
 // Waitlist table for storing creator and brand signups
 export const waitlist = pgTable("waitlist", {
-  id: text("id").primaryKey().default(sql`gen_random_uuid()`),
+  id: text("id")
+    .primaryKey()
+    .default(sql`gen_random_uuid()`),
   // Critical fix: userId must be text to match users.id, and notNull
-  userId: text("user_id").notNull().references(() => users.id),
+  userId: text("user_id")
+    .notNull()
+    .references(() => users.id),
   userType: text("user_type").notNull(), // "creator" or "brand"
   name: text("name").notNull(),
   email: text("email").notNull(),
-  companyOrHandle: text("company_or_handle"),
-  message: text("message"),
+  companyOrHandle: text("company_or_handle").notNull(),
+  message: text("message").notNull(),
   createdAt: timestamp("created_at").defaultNow(),
 });
 
-export const insertWaitlistSchema = createInsertSchema(waitlist).omit({
-  id: true,
-  createdAt: true,
-});
+export const insertWaitlistSchema = createInsertSchema(waitlist)
+  .extend({
+    email: z
+      .string()
+      .email("Invalid email address")
+      .min(1, "Email is required"),
+    name: z.string().min(1, "Name is required"),
+    userType: z.enum(["creator", "brand"], {
+      required_error: "Please select a user type",
+    }),
+    companyOrHandle: z.string().min(1, "Company or Social Handle is required"),
+    message: z.string().min(1, "Please provide a short message"),
+  })
+  .omit({
+    id: true,
+    createdAt: true,
+  });
 
 export type InsertWaitlist = z.infer<typeof insertWaitlistSchema>;
 export type Waitlist = typeof waitlist.$inferSelect;

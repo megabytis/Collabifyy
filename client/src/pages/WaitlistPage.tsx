@@ -48,7 +48,7 @@ export default function WaitlistPage() {
 
   useEffect(() => {
     if (user) {
-      setFormData(prev => ({
+      setFormData((prev) => ({
         ...prev,
         name: `${user.firstName || ""} ${user.lastName || ""}`.trim() || "",
         email: user.email || "",
@@ -58,7 +58,7 @@ export default function WaitlistPage() {
 
   const mutation = useMutation({
     mutationFn: async (data: typeof formData) => {
-      return await apiRequest("POST","/api/waitlist",{
+      return await apiRequest("POST", "/api/waitlist", {
         userType,
         name: data.name,
         email: data.email,
@@ -70,8 +70,6 @@ export default function WaitlistPage() {
       setSubmitted(true);
     },
     onError: (error: Error) => {
-
-      
       if (isUnauthorizedError(error)) {
         toast({
           title: "Session Expired",
@@ -113,14 +111,17 @@ export default function WaitlistPage() {
         {/* Background blobs */}
         <div className="pointer-events-none absolute -left-32 top-10 h-64 w-64 rounded-full bg-primary/25 blur-3xl" />
         <div className="pointer-events-none absolute right-10 bottom-20 h-72 w-72 rounded-full bg-primary/20 blur-3xl" />
-        
+
         <motion.div
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.6, ease: "easeOut" }}
           className="w-full max-w-md text-center relative z-10"
         >
-          <Card className="backdrop-blur-md bg-card/80 border border-white/10 shadow-2xl" data-testid="card-success">
+          <Card
+            className="backdrop-blur-md bg-card/80 border border-white/10 shadow-2xl"
+            data-testid="card-success"
+          >
             <CardContent className="pt-12 pb-12 space-y-6">
               <motion.div
                 initial={{ scale: 0 }}
@@ -144,7 +145,8 @@ export default function WaitlistPage() {
                 transition={{ delay: 0.4, duration: 0.5 }}
                 className="text-muted-foreground"
               >
-                Thanks for joining the waitlist. We'll be in touch soon with early access to Collabifyy.
+                Thanks for joining the waitlist. We'll be in touch soon with
+                early access to Collabifyy.
               </motion.p>
               <motion.div
                 initial={{ opacity: 0, y: 10 }}
@@ -171,22 +173,25 @@ export default function WaitlistPage() {
       {/* Background blobs */}
       <div className="pointer-events-none absolute -left-32 top-10 h-64 w-64 rounded-full bg-primary/25 blur-3xl" />
       <div className="pointer-events-none absolute right-10 bottom-20 h-72 w-72 rounded-full bg-primary/20 blur-3xl" />
-      
+
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6, ease: "easeOut" }}
         className="w-full max-w-2xl relative z-10"
       >
-        <Card className="backdrop-blur-md bg-card/80 border border-white/10 shadow-2xl" data-testid="card-waitlist">
+        <Card
+          className="backdrop-blur-md bg-card/80 border border-white/10 shadow-2xl"
+          data-testid="card-waitlist"
+        >
           <CardHeader className="space-y-4">
             <motion.div
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ delay: 0.2, duration: 0.5 }}
             >
-              <Badge 
-                variant="outline" 
+              <Badge
+                variant="outline"
                 className="relative text-sm overflow-hidden py-1.5 px-4 border-none rounded-full bg-transparent mb-2"
               >
                 <div className="absolute inset-0 z-0">
@@ -203,7 +208,7 @@ export default function WaitlistPage() {
                 </div>
               </Badge>
             </motion.div>
-            
+
             <motion.h1
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
@@ -217,7 +222,7 @@ export default function WaitlistPage() {
                 </span>
               </span>
             </motion.h1>
-            
+
             <motion.p
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -230,95 +235,112 @@ export default function WaitlistPage() {
             </motion.p>
           </CardHeader>
 
-        <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-6">
-            <div className="grid md:grid-cols-2 gap-6">
+          <CardContent>
+            <form onSubmit={handleSubmit} className="space-y-6">
+              <div className="grid md:grid-cols-2 gap-6">
+                <div className="space-y-2">
+                  <Label htmlFor="name">Full Name *</Label>
+                  <Input
+                    id="name"
+                    required
+                    value={formData.name}
+                    onChange={(e) =>
+                      setFormData({ ...formData, name: e.target.value })
+                    }
+                    placeholder="John Doe"
+                    data-testid="input-name"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="email">Email *</Label>
+                  <Input
+                    id="email"
+                    type="email"
+                    required
+                    value={formData.email}
+                    onChange={(e) =>
+                      setFormData({ ...formData, email: e.target.value })
+                    }
+                    placeholder="john@example.com"
+                    data-testid="input-email"
+                  />
+                </div>
+              </div>
+
               <div className="space-y-2">
-                <Label htmlFor="name">Full Name *</Label>
+                <Label htmlFor="companyOrHandle">
+                  {userType === "brand"
+                    ? "Company Name"
+                    : "Social Media Handle"}{" "}
+                  <span className="test-destructive">*</span>
+                </Label>
                 <Input
-                  id="name"
+                  id="companyOrHandle"
                   required
-                  value={formData.name}
-                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  placeholder="John Doe"
-                  data-testid="input-name"
+                  value={formData.companyOrHandle}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      companyOrHandle: e.target.value,
+                    })
+                  }
+                  placeholder={
+                    userType === "brand" ? "Acme Inc." : "@yourhandle"
+                  }
+                  data-testid="input-company-handle"
                 />
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="email">Email *</Label>
-                <Input
-                  id="email"
-                  type="email"
+                <Label htmlFor="message">
+                  Tell us about yourself{" "}
+                  <span className="test-destructive">*</span>{" "}
+                </Label>
+                <Textarea
+                  id="message"
                   required
-                  value={formData.email}
-                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                  placeholder="john@example.com"
-                  data-testid="input-email"
+                  value={formData.message}
+                  onChange={(e) =>
+                    setFormData({ ...formData, message: e.target.value })
+                  }
+                  placeholder={
+                    userType === "brand"
+                      ? "What types of campaigns are you interested in?"
+                      : "What's your content niche and audience size?"
+                  }
+                  rows={4}
+                  data-testid="textarea-message"
                 />
               </div>
-            </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="companyOrHandle">
-                {userType === "brand" ? "Company Name" : "Social Media Handle"}
-              </Label>
-              <Input
-                id="companyOrHandle"
-                value={formData.companyOrHandle}
-                onChange={(e) =>
-                  setFormData({ ...formData, companyOrHandle: e.target.value })
-                }
-                placeholder={
-                  userType === "brand" ? "Acme Inc." : "@yourhandle"
-                }
-                data-testid="input-company-handle"
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="message">Tell us about yourself</Label>
-              <Textarea
-                id="message"
-                value={formData.message}
-                onChange={(e) => setFormData({ ...formData, message: e.target.value })}
-                placeholder={
-                  userType === "brand"
-                    ? "What types of campaigns are you interested in?"
-                    : "What's your content niche and audience size?"
-                }
-                rows={4}
-                data-testid="textarea-message"
-              />
-            </div>
-
-            <motion.div
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.6, duration: 0.5 }}
-              className="flex gap-4"
-            >
-              <Button 
-                type="submit" 
-                className="flex-1 transition-transform duration-200 hover:scale-105 btn-shine" 
-                disabled={mutation.isPending}
-                data-testid="button-submit-waitlist"
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.6, duration: 0.5 }}
+                className="flex gap-4"
               >
-                {mutation.isPending ? "Submitting..." : "Join Waitlist"}
-              </Button>
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => setLocation("/dashboard")}
-                className="transition-transform duration-200 hover:scale-105"
-                data-testid="button-back"
-              >
-                Back
-              </Button>
-            </motion.div>
-          </form>
-        </CardContent>
-      </Card>
+                <Button
+                  type="submit"
+                  className="flex-1 transition-transform duration-200 hover:scale-105 btn-shine"
+                  disabled={mutation.isPending}
+                  data-testid="button-submit-waitlist"
+                >
+                  {mutation.isPending ? "Submitting..." : "Join Waitlist"}
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setLocation("/dashboard")}
+                  className="transition-transform duration-200 hover:scale-105"
+                  data-testid="button-back"
+                >
+                  Back
+                </Button>
+              </motion.div>
+            </form>
+          </CardContent>
+        </Card>
       </motion.div>
     </div>
   );
