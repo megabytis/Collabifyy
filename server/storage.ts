@@ -1,13 +1,6 @@
-import {
-  users,
-  waitlist,
-  type User,
-  type UpsertUser,
-  type InsertWaitlist,
-  type Waitlist,
-} from "@shared/schema";
+import { users, waitlist, type User, type InsertUser, type Waitlist, type InsertWaitlist } from "@shared/schema";
 import { db } from "./db";
-import { eq, desc } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 
 export interface IStorage {
   // User operations - required for Replit Auth
@@ -21,35 +14,20 @@ export interface IStorage {
 }
 
 export class DatabaseStorage implements IStorage {
-  // User operations
-  async getUser(id: string): Promise<User | undefined> {
-    const [user] = await db.select().from(users).where(eq(users.id, id));
-    return user;
-  }
+    async getUser(id: string): Promise<User | undefined> {
+        const [user] = await db.select().from(users).where(eq(users.id, id));
+        return user;
+    }
 
-  async upsertUser(userData: UpsertUser): Promise<User> {
-    const [user] = await db
-      .insert(users)
-      .values(userData)
-      .onConflictDoUpdate({
-        target: users.id,
-        set: {
-          ...userData,
-          updatedAt: new Date(),
-        },
-      })
-      .returning();
-    return user;
-  }
+    async getUserByEmail(email: string): Promise<User | undefined> {
+        const [user] = await db.select().from(users).where(eq(users.email, email));
+        return user;
+    }
 
-  // Waitlist operations
-  async createWaitlistEntry(entry: InsertWaitlist): Promise<Waitlist> {
-    const [waitlistEntry] = await db
-      .insert(waitlist)
-      .values(entry)
-      .returning();
-    return waitlistEntry;
-  }
+    async createUser(insertUser: InsertUser): Promise<User> {
+        const [user] = await db.insert(users).values(insertUser).returning();
+        return user;
+    }
 
   async getWaitlistEntries(): Promise<Waitlist[]> {
     return await db
