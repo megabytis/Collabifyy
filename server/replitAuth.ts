@@ -7,6 +7,10 @@ import { storage } from "./storage";
 
 /**
  * Create session middleware
+ * IMPORTANT:
+ * - secure MUST be true
+ * - sameSite MUST be "none"
+ * for cross-domain OAuth (Render ↔ Vercel)
  */
 export function getSession() {
   const sessionTtl = 7 * 24 * 60 * 60 * 1000; // 1 week
@@ -19,8 +23,6 @@ export function getSession() {
     tableName: "sessions",
   });
 
-  const isProd = process.env.NODE_ENV === "production";
-
   return session({
     name: "collabifyy.sid",
     secret: process.env.SESSION_SECRET!,
@@ -29,8 +31,8 @@ export function getSession() {
     saveUninitialized: false,
     cookie: {
       httpOnly: true,
-      secure: isProd,                 // ✅ HTTPS only in prod
-      sameSite: "none",      // changed to none 
+      secure: true,      // 🔒 REQUIRED (DO NOT CHANGE)
+      sameSite: "none",  // 🌍 REQUIRED (DO NOT CHANGE)
       maxAge: sessionTtl,
     },
   });
@@ -40,12 +42,16 @@ export function getSession() {
  * Setup Passport + Google OAuth
  */
 export async function setupAuth(app: Express) {
+  // Required for secure cookies behind Render proxy
   app.set("trust proxy", 1);
 
   app.use(getSession());
   app.use(passport.initialize());
   app.use(passport.session());
 
+  /**
+   * Google OAuth strategy
+   */
   passport.use(
     new GoogleStrategy(
       {
@@ -88,22 +94,26 @@ export async function setupAuth(app: Express) {
   /**
    * Auth routes
    */
+
+  // Start Google OAuth
   app.get(
     "/api/login",
     passport.authenticate("google", { scope: ["email", "profile"] })
   );
 
+  // Google OAuth callback
   app.get(
     "/api/callback",
     passport.authenticate("google", {
       failureRedirect: `${process.env.FRONTEND_URL}/auth`,
     }),
     (_req, res) => {
-      // ✅ Go directly to waitlist flow
+      // Redirect to waitlist after successful login
       res.redirect(`${process.env.FRONTEND_URL}/waitlist?type=creator`);
     }
   );
 
+  // Logout
   app.get("/api/logout", (req, res) => {
     req.logout(() => {
       req.session.destroy(() => {
